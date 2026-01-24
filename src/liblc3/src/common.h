@@ -19,7 +19,7 @@
 #ifndef __LC3_COMMON_H
 #define __LC3_COMMON_H
 
-#include <lc3.h>
+#include "../include/lc3.h"
 #include "fastmath.h"
 
 #include <limits.h>

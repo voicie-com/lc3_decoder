@@ -1,3 +1,3 @@
-// Relative import to be able to reuse the C sources.
-// See the comment in ../lc3_decoder.podspec for more information.
-#include "../../src/lc3_decoder.c"
+// This file is intentionally left empty to allow independent compilation of liblc3 sources
+// via the Podspec source_files configuration.
+

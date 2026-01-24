@@ -16,7 +16,7 @@
  *
  ******************************************************************************/
 
-#include <lc3.h>
+#include "../include/lc3.h"
 
 #include "common.h"
 #include "bits.h"
