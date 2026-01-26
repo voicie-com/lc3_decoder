@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 import 'lc3_decoder_bindings_generated.dart';
 
-const String _libName = 'lc3';
+const String _libName = 'lc3_decoder';
 
 /// The dynamic library in which the symbols for [Lc3DecoderBindings] can be found.
 final ffi.DynamicLibrary _dylib = () {
