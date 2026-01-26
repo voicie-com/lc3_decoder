@@ -7,16 +7,6 @@ environment:
   sdk: ^3.10.3
   flutter: '>=3.3.0'
 
-flutter:
-  plugin:
-    platforms:
-      android:
-        ffiPlugin: true
-      ios:
-        ffiPlugin: true
-      windows:
-        ffiPlugin: true
-
 dependencies:
   flutter:
     sdk: flutter

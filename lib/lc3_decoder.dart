@@ -10,13 +10,9 @@ const String _libName = 'lc3_decoder';
 /// The dynamic library in which the symbols for [Lc3DecoderBindings] can be found.
 final ffi.DynamicLibrary _dylib = () {
   if (Platform.isMacOS || Platform.isIOS) {
-    try {
-      // Try loading as a dynamic framework (module)
-      return ffi.DynamicLibrary.open('lc3_decoder.framework/lc3_decoder');
-    } catch (_) {
-      // Fallback to process symbols (static linking)
-      return ffi.DynamicLibrary.process();
-    }
+    // On iOS, native assets bundle the library as a framework in the app's Frameworks folder.
+    // We need to load it explicitly by its framework path.
+    return ffi.DynamicLibrary.open('lc3_decoder.framework/lc3_decoder');
   }
   if (Platform.isAndroid || Platform.isLinux) {
     return ffi.DynamicLibrary.open('lib$_libName.so');
