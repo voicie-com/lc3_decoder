@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/services.dart'; // Add services for rootBundle
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -79,6 +80,27 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     } catch (e) {
       _log('Error picking file: $e');
+    }
+  }
+
+  Future<void> _loadAssetFile() async {
+    _log('Loading asset file...');
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}${Platform.pathSeparator}test.lc3');
+
+      // Always overwrite for testing
+      final data = await rootBundle.load('assets/test.lc3');
+      final bytes = data.buffer.asUint8List();
+      await file.writeAsBytes(bytes, flush: true);
+
+      setState(() {
+        _selectedFilePath = file.path;
+        _outputFilePath = null;
+      });
+      _log('Loaded asset to: ${file.path}');
+    } catch (e) {
+      _log('Error loading asset file: $e');
     }
   }
 
@@ -192,8 +214,10 @@ class _MyHomePageState extends State<MyHomePage> {
       // Get temporary directory for saving output
       final directory = await getApplicationDocumentsDirectory();
       final fileName =
-          '${_selectedFilePath!.split(Platform.pathSeparator).last.replaceAll('.lc3', '')}.pcm';
-      final outputFile = File('${directory.path}/$fileName');
+          '${_selectedFilePath!.split(RegExp(r'[/\\]')).last.replaceAll('.lc3', '')}.pcm';
+      final outputFile = File(
+        '${directory.path}${Platform.pathSeparator}$fileName',
+      );
 
       _log('Writing output file...');
       await outputFile.writeAsBytes(outputBuffer.toBytes());
@@ -241,6 +265,12 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: _isDecoding ? null : _pickFile,
               icon: const Icon(Icons.folder_open),
               label: const Text('Pick LC3 File'),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton.icon(
+              onPressed: _isDecoding ? null : _loadAssetFile,
+              icon: const Icon(Icons.file_present),
+              label: const Text('Load Asset (test.lc3)'),
             ),
             const SizedBox(height: 10),
             Text(
