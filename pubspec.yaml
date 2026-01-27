@@ -1,6 +1,6 @@
 name: lc3_decoder
 description: "flutter plugin for decoding lc3 audio."
-version: 0.0.1
+version: 0.0.2
 homepage:
 
 environment:

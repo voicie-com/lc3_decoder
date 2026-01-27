@@ -26,9 +26,7 @@ void main(List<String> args) async {
     await cbuilder.run(
       input: config,
       output: output,
-      logger: Logger('')
-        ..level = Level.ALL
-        ..onRecord.listen((record) => print(record.message)),
+      logger: Logger('')..level = Level.ALL,
     );
   });
 }

@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 // Constants from C code (matching simple_decoder.dart)
+// ignore: constant_identifier_names
 const int LC3_FILE_ID = 0xCC1C; // (0x1C | (0xCC << 8))
 
 void main() {
@@ -232,9 +233,8 @@ class _MyHomePageState extends State<MyHomePage> {
       );
       _log('Saved to internal storage: ${outputFile.path}');
       _log('Click "Share/Export" to save to device.');
-    } catch (e, stack) {
+    } catch (e) {
       _log('Fatal Error: $e');
-      print(stack);
     } finally {
       setState(() {
         _isDecoding = false;
@@ -246,7 +246,9 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_outputFilePath == null) return;
     try {
       final file = XFile(_outputFilePath!);
-      await Share.shareXFiles([file], text: 'Decoded LC3 PCM Audio');
+      await SharePlus.instance.share(
+        ShareParams(files: [file], text: 'Decoded LC3 PCM Audio'),
+      );
     } catch (e) {
       _log('Error sharing file: $e');
     }
