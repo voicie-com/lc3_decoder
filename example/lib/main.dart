@@ -7,10 +7,17 @@ import 'package:flutter/material.dart';
 import 'package:lc3_decoder/lc3_decoder.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'wav_header_utils.dart';
 
 // Constants from C code (matching simple_decoder.dart)
 // ignore: constant_identifier_names
 const int LC3_FILE_ID = 0xCC1C; // (0x1C | (0xCC << 8))
+
+/// Output format for decoded audio
+enum OutputFormat {
+  pcm, // Raw PCM data
+  wav, // WAV file with headers
+}
 
 void main() {
   runApp(const MyApp());
@@ -105,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Future<void> _decodeFile() async {
+  Future<void> _decodeFile(OutputFormat outputFormat) async {
     if (_selectedFilePath == null) return;
 
     setState(() {
@@ -113,7 +120,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _statusLog = ''; // Clear log on new run
       _outputFilePath = null;
     });
-    _log('Starting decoding...');
+    _log('Starting decoding to ${outputFormat.name.toUpperCase()}...');
 
     try {
       final inputFile = File(_selectedFilePath!);
@@ -212,16 +219,35 @@ class _MyHomePageState extends State<MyHomePage> {
       stopwatch.stop();
 
       // --- Save Output ---
+      final pcmBytes = outputBuffer.toBytes();
+      final Uint8List outputBytes;
+      final String fileExtension;
+
+      if (outputFormat == OutputFormat.wav) {
+        _log('Adding WAV header...');
+        outputBytes = WavHeaderUtils.addWavHeader(
+          pcmBytes: pcmBytes,
+          sampleRate: sampleRate,
+          channels: 1, // Mono
+          bitDepth: 16,
+        );
+        fileExtension = 'wav';
+      } else {
+        // PCM format - raw bytes
+        outputBytes = pcmBytes;
+        fileExtension = 'pcm';
+      }
+
       // Get temporary directory for saving output
       final directory = await getApplicationDocumentsDirectory();
       final fileName =
-          '${_selectedFilePath!.split(RegExp(r'[/\\]')).last.replaceAll('.lc3', '')}.pcm';
+          '${_selectedFilePath!.split(RegExp(r'[/\\]')).last.replaceAll('.lc3', '')}.$fileExtension';
       final outputFile = File(
         '${directory.path}${Platform.pathSeparator}$fileName',
       );
 
-      _log('Writing output file...');
-      await outputFile.writeAsBytes(outputBuffer.toBytes());
+      _log('Writing ${fileExtension.toUpperCase()} file...');
+      await outputFile.writeAsBytes(outputBytes);
 
       setState(() {
         _outputFilePath = outputFile.path;
@@ -231,6 +257,11 @@ class _MyHomePageState extends State<MyHomePage> {
       _log(
         'Processed $frameCount frames in ${stopwatch.elapsedMilliseconds}ms.',
       );
+      if (outputFormat == OutputFormat.wav) {
+        _log('Converted to WAV format (${sampleRate}Hz, 16-bit, mono)');
+      } else {
+        _log('Saved as raw PCM (${sampleRate}Hz, 16-bit, mono)');
+      }
       _log('Saved to internal storage: ${outputFile.path}');
       _log('Click "Share/Export" to save to device.');
     } catch (e) {
@@ -247,7 +278,7 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       final file = XFile(_outputFilePath!);
       await SharePlus.instance.share(
-        ShareParams(files: [file], text: 'Decoded LC3 PCM Audio'),
+        ShareParams(files: [file], text: 'Decoded LC3 Audio'),
       );
     } catch (e) {
       _log('Error sharing file: $e');
@@ -284,17 +315,38 @@ class _MyHomePageState extends State<MyHomePage> {
             const SizedBox(height: 20),
             if (_isDecoding) const LinearProgressIndicator(),
             const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: (_selectedFilePath == null || _isDecoding)
-                  ? null
-                  : _decodeFile,
-              icon: const Icon(Icons.play_arrow),
-              label: const Text('Decode to PCM'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: (_selectedFilePath == null || _isDecoding)
+                        ? null
+                        : () => _decodeFile(OutputFormat.pcm),
+                    icon: const Icon(Icons.audio_file),
+                    label: const Text('Decode to PCM'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: (_selectedFilePath == null || _isDecoding)
+                        ? null
+                        : () => _decodeFile(OutputFormat.wav),
+                    icon: const Icon(Icons.music_note),
+                    label: const Text('Decode to WAV'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
