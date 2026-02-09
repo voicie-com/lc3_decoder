@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:lc3_decoder/lc3_decoder.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'wav_header_utils.dart';
+import 'package:lc3_decoder_example/wav_header_utils.dart';
 
 // Constants from C code (matching simple_decoder.dart)
 // ignore: constant_identifier_names
@@ -27,13 +27,11 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'LC3 Decoder GUI',
-      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
-      home: const MyHomePage(),
-    );
-  }
+  Widget build(BuildContext context) => MaterialApp(
+    title: 'LC3 Decoder GUI',
+    theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+    home: const MyHomePage(),
+  );
 }
 
 class MyHomePage extends StatefulWidget {
@@ -212,7 +210,7 @@ class _MyHomePageState extends State<MyHomePage> {
         }
 
         // Yield to UI thread occasionally to keep UI responsive
-        if (frameCount % 100 == 0) await Future.delayed(Duration.zero);
+        if (frameCount % 100 == 0) await Future<void>.delayed(Duration.zero);
       }
 
       decoder.dispose();
@@ -286,103 +284,101 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('LC3 Decoder GUI')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ElevatedButton.icon(
-              onPressed: _isDecoding ? null : _pickFile,
-              icon: const Icon(Icons.folder_open),
-              label: const Text('Pick LC3 File'),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton.icon(
-              onPressed: _isDecoding ? null : _loadAssetFile,
-              icon: const Icon(Icons.file_present),
-              label: const Text('Load Asset (test.lc3)'),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              _selectedFilePath == null
-                  ? 'No file selected'
-                  : 'Selected: ${_selectedFilePath!.split(Platform.pathSeparator).last}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            if (_isDecoding) const LinearProgressIndicator(),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: (_selectedFilePath == null || _isDecoding)
-                        ? null
-                        : () => _decodeFile(OutputFormat.pcm),
-                    icon: const Icon(Icons.audio_file),
-                    label: const Text('Decode to PCM'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('LC3 Decoder GUI')),
+    body: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ElevatedButton.icon(
+            onPressed: _isDecoding ? null : _pickFile,
+            icon: const Icon(Icons.folder_open),
+            label: const Text('Pick LC3 File'),
+          ),
+          const SizedBox(height: 10),
+          ElevatedButton.icon(
+            onPressed: _isDecoding ? null : _loadAssetFile,
+            icon: const Icon(Icons.file_present),
+            label: const Text('Load Asset (test.lc3)'),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            _selectedFilePath == null
+                ? 'No file selected'
+                : 'Selected: ${_selectedFilePath!.split(Platform.pathSeparator).last}',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 20),
+          if (_isDecoding) const LinearProgressIndicator(),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: (_selectedFilePath == null || _isDecoding)
+                      ? null
+                      : () => _decodeFile(OutputFormat.pcm),
+                  icon: const Icon(Icons.audio_file),
+                  label: const Text('Decode to PCM'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: (_selectedFilePath == null || _isDecoding)
-                        ? null
-                        : () => _decodeFile(OutputFormat.wav),
-                    icon: const Icon(Icons.music_note),
-                    label: const Text('Decode to WAV'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: (_selectedFilePath == null || _isDecoding)
+                      ? null
+                      : () => _decodeFile(OutputFormat.wav),
+                  icon: const Icon(Icons.music_note),
+                  label: const Text('Decode to WAV'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: _outputFilePath == null ? null : _shareFile,
-              icon: const Icon(Icons.share),
-              label: const Text('Share / Save Export'),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Status Log:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  child: Text(
-                    _statusLog,
-                    style: const TextStyle(
-                      fontFamily: 'Consolas',
-                      fontSize: 13,
-                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: _outputFilePath == null ? null : _shareFile,
+            icon: const Icon(Icons.share),
+            label: const Text('Share / Save Export'),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Status Log:',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                child: Text(
+                  _statusLog,
+                  style: const TextStyle(
+                    fontFamily: 'Consolas',
+                    fontSize: 13,
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }

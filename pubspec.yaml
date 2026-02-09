@@ -1,7 +1,16 @@
 name: lc3_decoder
-description: "flutter plugin for decoding lc3 audio."
-version: 0.0.2
-homepage:
+description: "A Flutter FFI plugin for decoding LC3 (Low Complexity Communication Codec) audio with cross-platform support."
+version: 0.0.3
+homepage: https://github.com/voicie-com/lc3_decoder
+repository: https://github.com/voicie-com/lc3_decoder
+issue_tracker: https://github.com/voicie-com/lc3_decoder/issues
+
+topics:
+  - audio
+  - codec
+  - decoder
+  - lc3
+  - ffi
 
 environment:
   sdk: ^3.10.3
