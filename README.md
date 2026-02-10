@@ -31,7 +31,7 @@ Add this package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  lc3_decoder: ^0.0.2
+  lc3_decoder: ^0.0.3
 ```
 
 Then run:
