@@ -1,15 +1,27 @@
 # Run with `dart run ffigen --config ffigen.yaml`.
 name: Lc3DecoderBindings
 description: |
-  Bindings for `src/liblc3`.
+  Bindings for `src/liblc3`, `src/opus` (public API only), `src/libopusenc`
+  and our own `src/shim.h` (non-variadic ope_encoder_ctl wrappers).
 
   Regenerate bindings with `dart run ffigen --config ffigen.yaml`.
 output: 'lib/lc3_decoder_bindings_generated.dart'
 headers:
   entry-points:
     - 'src/liblc3/include/lc3.h'
+    - 'src/opus/include/opus.h'
+    - 'src/libopusenc/include/opusenc.h'
+    - 'src/shim.h'
   include-directives:
     - 'src/liblc3/include/lc3.h'
+    - 'src/opus/include/opus.h'
+    - 'src/opus/include/opus_defines.h'
+    - 'src/opus/include/opus_types.h'
+    - 'src/libopusenc/include/opusenc.h'
+    - 'src/shim.h'
+compiler-opts:
+  - '-Isrc/opus/include'
+  - '-Isrc/libopusenc/include'
 preamble: |
   // ignore_for_file: always_specify_types
   // ignore_for_file: camel_case_types
