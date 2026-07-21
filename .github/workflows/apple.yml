@@ -1,0 +1,37 @@
+name: apple
+
+# The vendored C (liblc3 + libopus + libopusenc) is only ever built locally on
+# Windows and Android, so nothing else proves it compiles and links for Apple
+# targets. `flutter test` on the macOS runner builds the native asset and
+# actually runs it; the iOS build additionally proves the arm64 device target
+# links, which is the one that ships.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  macos-and-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # No-op on Flutter versions where native assets are already on by
+      # default; without it, older versions silently skip hook/build.dart.
+      - run: flutter config --enable-native-assets || true
+
+      - run: flutter pub get
+
+      - name: Build and run the native asset on macOS
+        run: flutter test
+
+      - name: Link the native asset for an iOS device
+        working-directory: example
+        run: |
+          flutter pub get
+          flutter build ios --no-codesign --debug
