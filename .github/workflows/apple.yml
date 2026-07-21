@@ -2,9 +2,9 @@ name: apple
 
 # The vendored C (liblc3 + libopus + libopusenc) is only ever built locally on
 # Windows and Android, so nothing else proves it compiles and links for Apple
-# targets. `flutter test` on the macOS runner builds the native asset and
-# actually runs it; the iOS build additionally proves the arm64 device target
-# links, which is the one that ships.
+# targets. The iOS build is the gate that matters -- it links the arm64 device
+# slice that ships -- so it runs first and is not blocked by anything else.
+# `flutter test` then builds the asset for the macOS host and actually runs it.
 on:
   push:
   pull_request:
@@ -27,11 +27,17 @@ jobs:
 
       - run: flutter pub get
 
-      - name: Build and run the native asset on macOS
-        run: flutter test
-
       - name: Link the native asset for an iOS device
         working-directory: example
         run: |
           flutter pub get
           flutter build ios --no-codesign --debug
+
+      - name: Build and run the native asset on macOS
+        run: flutter test
+
+      # The asset's filename differs per platform and build context, and
+      # getting it wrong only shows up as a dlopen failure at runtime.
+      - name: Show where the native asset was built
+        if: always()
+        run: find .dart_tool build example/build -name '*lc3_decoder*' 2>/dev/null | head -40 || true

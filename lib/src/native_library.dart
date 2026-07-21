@@ -5,22 +5,34 @@ import '../lc3_decoder_bindings_generated.dart';
 
 const String _libName = 'lc3_decoder';
 
-/// The single native asset backing this package: liblc3 (decode) and
-/// libopus/libogg/libopusenc (encode + mux) are compiled into one library
-/// by `hook/build.dart`, so there is only ever one dynamic library to load.
-final ffi.DynamicLibrary nativeLibrary = () {
+/// Filenames the native asset can have, most specific first.
+///
+/// Apple targets need two: a packaged app wraps the dylib in a framework (for
+/// code signing), while `flutter test` and plain Dart builds leave it as the
+/// bare `lib<name>.dylib` the build hook produced. Trying only one of them
+/// works in exactly one of those two contexts.
+List<String> _candidateNames() {
   if (Platform.isMacOS || Platform.isIOS) {
-    // On iOS, native assets bundle the library as a framework in the app's Frameworks folder.
-    // We need to load it explicitly by its framework path.
-    return ffi.DynamicLibrary.open('lc3_decoder.framework/lc3_decoder');
+    return ['$_libName.framework/$_libName', 'lib$_libName.dylib'];
   }
-  if (Platform.isAndroid || Platform.isLinux) {
-    return ffi.DynamicLibrary.open('lib$_libName.so');
-  }
-  if (Platform.isWindows) {
-    return ffi.DynamicLibrary.open('$_libName.dll');
-  }
+  if (Platform.isAndroid || Platform.isLinux) return ['lib$_libName.so'];
+  if (Platform.isWindows) return ['$_libName.dll'];
   throw UnsupportedError('Unknown platform: ${Platform.operatingSystem}');
+}
+
+/// The single native asset backing this package: liblc3 (decode) and
+/// libopus/libopusenc (encode + mux) are compiled into one library by
+/// `hook/build.dart`, so there is only ever one dynamic library to load.
+final ffi.DynamicLibrary nativeLibrary = () {
+  final failures = <String>[];
+  for (final name in _candidateNames()) {
+    try {
+      return ffi.DynamicLibrary.open(name);
+    } on ArgumentError catch (e) {
+      failures.add('  $name -> ${e.message}');
+    }
+  }
+  throw StateError('Could not load the $_libName native asset. Tried:\n${failures.join('\n')}');
 }();
 
 /// Bindings to every native function in [nativeLibrary] (LC3 decode + Opus
