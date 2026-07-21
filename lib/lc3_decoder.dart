@@ -58,24 +58,14 @@ class Lc3Decoder {
   }
 
   void _init() {
-    final int size = _bindings.lc3_decoder_size(
-      _frameDurationUs,
-      _sampleRateHz,
-    );
+    final int size = _bindings.lc3_decoder_size(_frameDurationUs, _sampleRateHz);
     if (size == 0) {
-      throw Exception(
-        'Failed to calculate LC3 decoder size. Invalid parameters?',
-      );
+      throw Exception('Failed to calculate LC3 decoder size. Invalid parameters?');
     }
 
     _decoderMemory = calloc<ffi.Uint8>(size).cast<ffi.Void>();
 
-    _decoder = _bindings.lc3_setup_decoder(
-      _frameDurationUs,
-      _sampleRateHz,
-      0,
-      _decoderMemory,
-    );
+    _decoder = _bindings.lc3_setup_decoder(_frameDurationUs, _sampleRateHz, 0, _decoderMemory);
 
     if (_decoder == ffi.nullptr) {
       calloc.free(_decoderMemory);
@@ -93,19 +83,14 @@ class Lc3Decoder {
     final Uint8List inputView = inputPtr.asTypedList(inputSize);
     inputView.setAll(0, inputFrame);
 
-    final int samplesPerFrame = _bindings.lc3_frame_samples(
-      _frameDurationUs,
-      _sampleRateHz,
-    );
+    final int samplesPerFrame = _bindings.lc3_frame_samples(_frameDurationUs, _sampleRateHz);
     if (samplesPerFrame == -1) {
       calloc.free(inputPtr);
       throw Exception('Failed to calculate samples per frame.');
     }
 
     final int outputSizeBytes = samplesPerFrame * 2;
-    final ffi.Pointer<ffi.Void> outputPtr = calloc<ffi.Uint8>(
-      outputSizeBytes,
-    ).cast<ffi.Void>();
+    final ffi.Pointer<ffi.Void> outputPtr = calloc<ffi.Uint8>(outputSizeBytes).cast<ffi.Void>();
 
     try {
       final int result = _bindings.lc3_decode(
@@ -123,9 +108,7 @@ class Lc3Decoder {
 
       final Uint8List outputBytes = Uint8List(outputSizeBytes);
       final ffi.Pointer<ffi.Uint8> outputUint8Ptr = outputPtr.cast<ffi.Uint8>();
-      final Uint8List nativeOutputView = outputUint8Ptr.asTypedList(
-        outputSizeBytes,
-      );
+      final Uint8List nativeOutputView = outputUint8Ptr.asTypedList(outputSizeBytes);
       outputBytes.setAll(0, nativeOutputView);
 
       return outputBytes;

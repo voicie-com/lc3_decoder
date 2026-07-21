@@ -15,17 +15,14 @@ import 'dart:ffi' as ffi;
 ///
 class Lc3DecoderBindings {
   /// Holds the symbol lookup function.
-  final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
-  _lookup;
+  final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName) _lookup;
 
   /// The symbols are looked up in [dynamicLibrary].
-  Lc3DecoderBindings(ffi.DynamicLibrary dynamicLibrary)
-    : _lookup = dynamicLibrary.lookup;
+  Lc3DecoderBindings(ffi.DynamicLibrary dynamicLibrary) : _lookup = dynamicLibrary.lookup;
 
   /// The symbols are looked up with [lookup].
-  Lc3DecoderBindings.fromLookup(
-    ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName) lookup,
-  ) : _lookup = lookup;
+  Lc3DecoderBindings.fromLookup(ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName) lookup)
+    : _lookup = lookup;
 
   /// Return the number of PCM samples in a frame
   /// hrmode          Enable High-Resolution mode (48000 and 96000 sample rates)
@@ -36,23 +33,19 @@ class Lc3DecoderBindings {
     return _lc3_hr_frame_samples(hrmode, dt_us, sr_hz);
   }
 
-  late final _lc3_hr_frame_samplesPtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Bool, ffi.Int, ffi.Int)>>(
-        'lc3_hr_frame_samples',
-      );
-  late final _lc3_hr_frame_samples = _lc3_hr_frame_samplesPtr
-      .asFunction<int Function(bool, int, int)>();
+  late final _lc3_hr_frame_samplesPtr = _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Bool, ffi.Int, ffi.Int)>>(
+    'lc3_hr_frame_samples',
+  );
+  late final _lc3_hr_frame_samples = _lc3_hr_frame_samplesPtr.asFunction<int Function(bool, int, int)>();
 
   int lc3_frame_samples(int dt_us, int sr_hz) {
     return _lc3_frame_samples(dt_us, sr_hz);
   }
 
-  late final _lc3_frame_samplesPtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int)>>(
-        'lc3_frame_samples',
-      );
-  late final _lc3_frame_samples = _lc3_frame_samplesPtr
-      .asFunction<int Function(int, int)>();
+  late final _lc3_frame_samplesPtr = _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int)>>(
+    'lc3_frame_samples',
+  );
+  late final _lc3_frame_samples = _lc3_frame_samplesPtr.asFunction<int Function(int, int)>();
 
   /// Return the size of frames, from bitrate
   /// hrmode          Enable High-Resolution mode (48000 and 96000 sample rates)
@@ -66,24 +59,15 @@ class Lc3DecoderBindings {
   }
 
   late final _lc3_hr_frame_bytesPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Int Function(ffi.Bool, ffi.Int, ffi.Int, ffi.Int)
-        >
-      >('lc3_hr_frame_bytes');
-  late final _lc3_hr_frame_bytes = _lc3_hr_frame_bytesPtr
-      .asFunction<int Function(bool, int, int, int)>();
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Bool, ffi.Int, ffi.Int, ffi.Int)>>('lc3_hr_frame_bytes');
+  late final _lc3_hr_frame_bytes = _lc3_hr_frame_bytesPtr.asFunction<int Function(bool, int, int, int)>();
 
   int lc3_frame_bytes(int dt_us, int bitrate) {
     return _lc3_frame_bytes(dt_us, bitrate);
   }
 
-  late final _lc3_frame_bytesPtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int)>>(
-        'lc3_frame_bytes',
-      );
-  late final _lc3_frame_bytes = _lc3_frame_bytesPtr
-      .asFunction<int Function(int, int)>();
+  late final _lc3_frame_bytesPtr = _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int)>>('lc3_frame_bytes');
+  late final _lc3_frame_bytes = _lc3_frame_bytesPtr.asFunction<int Function(int, int)>();
 
   /// Return the size of frame blocks, from bitrate
   /// A frame block contains the frame data from all channels.
@@ -94,22 +78,14 @@ class Lc3DecoderBindings {
   /// bitrate         Target bitrate in bit per second, 0 or `INT_MAX` returns
   /// respectively the minimum and maximum allowed size.
   /// return          The floor size in bytes of the frames, -1 on bad parameters
-  int lc3_hr_frame_block_bytes(
-    bool hrmode,
-    int dt_us,
-    int sr_hz,
-    int nchannels,
-    int bitrate,
-  ) {
+  int lc3_hr_frame_block_bytes(bool hrmode, int dt_us, int sr_hz, int nchannels, int bitrate) {
     return _lc3_hr_frame_block_bytes(hrmode, dt_us, sr_hz, nchannels, bitrate);
   }
 
   late final _lc3_hr_frame_block_bytesPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Int Function(ffi.Bool, ffi.Int, ffi.Int, ffi.Int, ffi.Int)
-        >
-      >('lc3_hr_frame_block_bytes');
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Bool, ffi.Int, ffi.Int, ffi.Int, ffi.Int)>>(
+        'lc3_hr_frame_block_bytes',
+      );
   late final _lc3_hr_frame_block_bytes = _lc3_hr_frame_block_bytesPtr
       .asFunction<int Function(bool, int, int, int, int)>();
 
@@ -117,12 +93,10 @@ class Lc3DecoderBindings {
     return _lc3_frame_block_bytes(dt_us, nframes, bitrate);
   }
 
-  late final _lc3_frame_block_bytesPtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int, ffi.Int)>>(
-        'lc3_frame_block_bytes',
-      );
-  late final _lc3_frame_block_bytes = _lc3_frame_block_bytesPtr
-      .asFunction<int Function(int, int, int)>();
+  late final _lc3_frame_block_bytesPtr = _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int, ffi.Int)>>(
+    'lc3_frame_block_bytes',
+  );
+  late final _lc3_frame_block_bytes = _lc3_frame_block_bytesPtr.asFunction<int Function(int, int, int)>();
 
   /// Resolve the bitrate, from the size of frames
   /// hrmode          Enable High-Resolution mode (48000 and 96000 sample rates)
@@ -135,24 +109,17 @@ class Lc3DecoderBindings {
   }
 
   late final _lc3_hr_resolve_bitratePtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Int Function(ffi.Bool, ffi.Int, ffi.Int, ffi.Int)
-        >
-      >('lc3_hr_resolve_bitrate');
-  late final _lc3_hr_resolve_bitrate = _lc3_hr_resolve_bitratePtr
-      .asFunction<int Function(bool, int, int, int)>();
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Bool, ffi.Int, ffi.Int, ffi.Int)>>('lc3_hr_resolve_bitrate');
+  late final _lc3_hr_resolve_bitrate = _lc3_hr_resolve_bitratePtr.asFunction<int Function(bool, int, int, int)>();
 
   int lc3_resolve_bitrate(int dt_us, int nbytes) {
     return _lc3_resolve_bitrate(dt_us, nbytes);
   }
 
-  late final _lc3_resolve_bitratePtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int)>>(
-        'lc3_resolve_bitrate',
-      );
-  late final _lc3_resolve_bitrate = _lc3_resolve_bitratePtr
-      .asFunction<int Function(int, int)>();
+  late final _lc3_resolve_bitratePtr = _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int)>>(
+    'lc3_resolve_bitrate',
+  );
+  late final _lc3_resolve_bitrate = _lc3_resolve_bitratePtr.asFunction<int Function(int, int)>();
 
   /// Return algorithmic delay, as a number of samples
   /// hrmode          Enable High-Resolution mode (48000 and 96000 sample rates)
@@ -163,23 +130,19 @@ class Lc3DecoderBindings {
     return _lc3_hr_delay_samples(hrmode, dt_us, sr_hz);
   }
 
-  late final _lc3_hr_delay_samplesPtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Bool, ffi.Int, ffi.Int)>>(
-        'lc3_hr_delay_samples',
-      );
-  late final _lc3_hr_delay_samples = _lc3_hr_delay_samplesPtr
-      .asFunction<int Function(bool, int, int)>();
+  late final _lc3_hr_delay_samplesPtr = _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Bool, ffi.Int, ffi.Int)>>(
+    'lc3_hr_delay_samples',
+  );
+  late final _lc3_hr_delay_samples = _lc3_hr_delay_samplesPtr.asFunction<int Function(bool, int, int)>();
 
   int lc3_delay_samples(int dt_us, int sr_hz) {
     return _lc3_delay_samples(dt_us, sr_hz);
   }
 
-  late final _lc3_delay_samplesPtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int)>>(
-        'lc3_delay_samples',
-      );
-  late final _lc3_delay_samples = _lc3_delay_samplesPtr
-      .asFunction<int Function(int, int)>();
+  late final _lc3_delay_samplesPtr = _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int)>>(
+    'lc3_delay_samples',
+  );
+  late final _lc3_delay_samples = _lc3_delay_samplesPtr.asFunction<int Function(int, int)>();
 
   /// Return size needed for an encoder
   /// hrmode          Enable High-Resolution mode (48000 and 96000 sample rates)
@@ -194,22 +157,17 @@ class Lc3DecoderBindings {
   }
 
   late final _lc3_hr_encoder_sizePtr =
-      _lookup<
-        ffi.NativeFunction<ffi.UnsignedInt Function(ffi.Bool, ffi.Int, ffi.Int)>
-      >('lc3_hr_encoder_size');
-  late final _lc3_hr_encoder_size = _lc3_hr_encoder_sizePtr
-      .asFunction<int Function(bool, int, int)>();
+      _lookup<ffi.NativeFunction<ffi.UnsignedInt Function(ffi.Bool, ffi.Int, ffi.Int)>>('lc3_hr_encoder_size');
+  late final _lc3_hr_encoder_size = _lc3_hr_encoder_sizePtr.asFunction<int Function(bool, int, int)>();
 
   int lc3_encoder_size(int dt_us, int sr_hz) {
     return _lc3_encoder_size(dt_us, sr_hz);
   }
 
-  late final _lc3_encoder_sizePtr =
-      _lookup<ffi.NativeFunction<ffi.UnsignedInt Function(ffi.Int, ffi.Int)>>(
-        'lc3_encoder_size',
-      );
-  late final _lc3_encoder_size = _lc3_encoder_sizePtr
-      .asFunction<int Function(int, int)>();
+  late final _lc3_encoder_sizePtr = _lookup<ffi.NativeFunction<ffi.UnsignedInt Function(ffi.Int, ffi.Int)>>(
+    'lc3_encoder_size',
+  );
+  late final _lc3_encoder_size = _lc3_encoder_sizePtr.asFunction<int Function(int, int)>();
 
   /// Setup encoder
   /// hrmode          Enable High-Resolution mode (48000 and 96000 sample rates)
@@ -224,57 +182,27 @@ class Lc3DecoderBindings {
   /// When used, `sr_pcm_hz` is intended to be higher or equal to the encoder
   /// sample rate `sr_hz`. The size of the context needed, given by
   /// `lc3_hr_encoder_size()` will be set accordingly to `sr_pcm_hz`.
-  lc3_encoder_t lc3_hr_setup_encoder(
-    bool hrmode,
-    int dt_us,
-    int sr_hz,
-    int sr_pcm_hz,
-    ffi.Pointer<ffi.Void> mem,
-  ) {
+  lc3_encoder_t lc3_hr_setup_encoder(bool hrmode, int dt_us, int sr_hz, int sr_pcm_hz, ffi.Pointer<ffi.Void> mem) {
     return _lc3_hr_setup_encoder(hrmode, dt_us, sr_hz, sr_pcm_hz, mem);
   }
 
   late final _lc3_hr_setup_encoderPtr =
-      _lookup<
-        ffi.NativeFunction<
-          lc3_encoder_t Function(
-            ffi.Bool,
-            ffi.Int,
-            ffi.Int,
-            ffi.Int,
-            ffi.Pointer<ffi.Void>,
-          )
-        >
-      >('lc3_hr_setup_encoder');
+      _lookup<ffi.NativeFunction<lc3_encoder_t Function(ffi.Bool, ffi.Int, ffi.Int, ffi.Int, ffi.Pointer<ffi.Void>)>>(
+        'lc3_hr_setup_encoder',
+      );
   late final _lc3_hr_setup_encoder = _lc3_hr_setup_encoderPtr
-      .asFunction<
-        lc3_encoder_t Function(bool, int, int, int, ffi.Pointer<ffi.Void>)
-      >();
+      .asFunction<lc3_encoder_t Function(bool, int, int, int, ffi.Pointer<ffi.Void>)>();
 
-  lc3_encoder_t lc3_setup_encoder(
-    int dt_us,
-    int sr_hz,
-    int sr_pcm_hz,
-    ffi.Pointer<ffi.Void> mem,
-  ) {
+  lc3_encoder_t lc3_setup_encoder(int dt_us, int sr_hz, int sr_pcm_hz, ffi.Pointer<ffi.Void> mem) {
     return _lc3_setup_encoder(dt_us, sr_hz, sr_pcm_hz, mem);
   }
 
   late final _lc3_setup_encoderPtr =
-      _lookup<
-        ffi.NativeFunction<
-          lc3_encoder_t Function(
-            ffi.Int,
-            ffi.Int,
-            ffi.Int,
-            ffi.Pointer<ffi.Void>,
-          )
-        >
-      >('lc3_setup_encoder');
+      _lookup<ffi.NativeFunction<lc3_encoder_t Function(ffi.Int, ffi.Int, ffi.Int, ffi.Pointer<ffi.Void>)>>(
+        'lc3_setup_encoder',
+      );
   late final _lc3_setup_encoder = _lc3_setup_encoderPtr
-      .asFunction<
-        lc3_encoder_t Function(int, int, int, ffi.Pointer<ffi.Void>)
-      >();
+      .asFunction<lc3_encoder_t Function(int, int, int, ffi.Pointer<ffi.Void>)>();
 
   /// Disable LTPF analysis
   /// encoder        Handle of the encoder
@@ -286,12 +214,10 @@ class Lc3DecoderBindings {
     return _lc3_encoder_disable_ltpf(encoder);
   }
 
-  late final _lc3_encoder_disable_ltpfPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(lc3_encoder_t)>>(
-        'lc3_encoder_disable_ltpf',
-      );
-  late final _lc3_encoder_disable_ltpf = _lc3_encoder_disable_ltpfPtr
-      .asFunction<void Function(lc3_encoder_t)>();
+  late final _lc3_encoder_disable_ltpfPtr = _lookup<ffi.NativeFunction<ffi.Void Function(lc3_encoder_t)>>(
+    'lc3_encoder_disable_ltpf',
+  );
+  late final _lc3_encoder_disable_ltpf = _lc3_encoder_disable_ltpfPtr.asFunction<void Function(lc3_encoder_t)>();
 
   /// Encode a frame
   /// encoder         Handle of the encoder
@@ -325,16 +251,7 @@ class Lc3DecoderBindings {
         >
       >('lc3_encode');
   late final _lc3_encode = _lc3_encodePtr
-      .asFunction<
-        int Function(
-          lc3_encoder_t,
-          int,
-          ffi.Pointer<ffi.Void>,
-          int,
-          int,
-          ffi.Pointer<ffi.Void>,
-        )
-      >();
+      .asFunction<int Function(lc3_encoder_t, int, ffi.Pointer<ffi.Void>, int, int, ffi.Pointer<ffi.Void>)>();
 
   /// Return size needed for an decoder
   /// hrmode          Enable High-Resolution mode (48000 and 96000 sample rates)
@@ -349,22 +266,17 @@ class Lc3DecoderBindings {
   }
 
   late final _lc3_hr_decoder_sizePtr =
-      _lookup<
-        ffi.NativeFunction<ffi.UnsignedInt Function(ffi.Bool, ffi.Int, ffi.Int)>
-      >('lc3_hr_decoder_size');
-  late final _lc3_hr_decoder_size = _lc3_hr_decoder_sizePtr
-      .asFunction<int Function(bool, int, int)>();
+      _lookup<ffi.NativeFunction<ffi.UnsignedInt Function(ffi.Bool, ffi.Int, ffi.Int)>>('lc3_hr_decoder_size');
+  late final _lc3_hr_decoder_size = _lc3_hr_decoder_sizePtr.asFunction<int Function(bool, int, int)>();
 
   int lc3_decoder_size(int dt_us, int sr_hz) {
     return _lc3_decoder_size(dt_us, sr_hz);
   }
 
-  late final _lc3_decoder_sizePtr =
-      _lookup<ffi.NativeFunction<ffi.UnsignedInt Function(ffi.Int, ffi.Int)>>(
-        'lc3_decoder_size',
-      );
-  late final _lc3_decoder_size = _lc3_decoder_sizePtr
-      .asFunction<int Function(int, int)>();
+  late final _lc3_decoder_sizePtr = _lookup<ffi.NativeFunction<ffi.UnsignedInt Function(ffi.Int, ffi.Int)>>(
+    'lc3_decoder_size',
+  );
+  late final _lc3_decoder_size = _lc3_decoder_sizePtr.asFunction<int Function(int, int)>();
 
   /// Setup decoder
   /// hrmode          Enable High-Resolution mode (48000 and 96000 sample rates)
@@ -379,57 +291,27 @@ class Lc3DecoderBindings {
   /// When used, `sr_pcm_hz` is intended to be higher or equal to the decoder
   /// sample rate `sr_hz`. The size of the context needed, given by
   /// `lc3_hr_decoder_size()` will be set accordingly to `sr_pcm_hz`.
-  lc3_decoder_t lc3_hr_setup_decoder(
-    bool hrmode,
-    int dt_us,
-    int sr_hz,
-    int sr_pcm_hz,
-    ffi.Pointer<ffi.Void> mem,
-  ) {
+  lc3_decoder_t lc3_hr_setup_decoder(bool hrmode, int dt_us, int sr_hz, int sr_pcm_hz, ffi.Pointer<ffi.Void> mem) {
     return _lc3_hr_setup_decoder(hrmode, dt_us, sr_hz, sr_pcm_hz, mem);
   }
 
   late final _lc3_hr_setup_decoderPtr =
-      _lookup<
-        ffi.NativeFunction<
-          lc3_decoder_t Function(
-            ffi.Bool,
-            ffi.Int,
-            ffi.Int,
-            ffi.Int,
-            ffi.Pointer<ffi.Void>,
-          )
-        >
-      >('lc3_hr_setup_decoder');
+      _lookup<ffi.NativeFunction<lc3_decoder_t Function(ffi.Bool, ffi.Int, ffi.Int, ffi.Int, ffi.Pointer<ffi.Void>)>>(
+        'lc3_hr_setup_decoder',
+      );
   late final _lc3_hr_setup_decoder = _lc3_hr_setup_decoderPtr
-      .asFunction<
-        lc3_decoder_t Function(bool, int, int, int, ffi.Pointer<ffi.Void>)
-      >();
+      .asFunction<lc3_decoder_t Function(bool, int, int, int, ffi.Pointer<ffi.Void>)>();
 
-  lc3_decoder_t lc3_setup_decoder(
-    int dt_us,
-    int sr_hz,
-    int sr_pcm_hz,
-    ffi.Pointer<ffi.Void> mem,
-  ) {
+  lc3_decoder_t lc3_setup_decoder(int dt_us, int sr_hz, int sr_pcm_hz, ffi.Pointer<ffi.Void> mem) {
     return _lc3_setup_decoder(dt_us, sr_hz, sr_pcm_hz, mem);
   }
 
   late final _lc3_setup_decoderPtr =
-      _lookup<
-        ffi.NativeFunction<
-          lc3_decoder_t Function(
-            ffi.Int,
-            ffi.Int,
-            ffi.Int,
-            ffi.Pointer<ffi.Void>,
-          )
-        >
-      >('lc3_setup_decoder');
+      _lookup<ffi.NativeFunction<lc3_decoder_t Function(ffi.Int, ffi.Int, ffi.Int, ffi.Pointer<ffi.Void>)>>(
+        'lc3_setup_decoder',
+      );
   late final _lc3_setup_decoder = _lc3_setup_decoderPtr
-      .asFunction<
-        lc3_decoder_t Function(int, int, int, ffi.Pointer<ffi.Void>)
-      >();
+      .asFunction<lc3_decoder_t Function(int, int, int, ffi.Pointer<ffi.Void>)>();
 
   /// Decode a frame
   /// decoder         Handle of the decoder
@@ -462,16 +344,7 @@ class Lc3DecoderBindings {
         >
       >('lc3_decode');
   late final _lc3_decode = _lc3_decodePtr
-      .asFunction<
-        int Function(
-          lc3_decoder_t,
-          ffi.Pointer<ffi.Void>,
-          int,
-          int,
-          ffi.Pointer<ffi.Void>,
-          int,
-        )
-      >();
+      .asFunction<int Function(lc3_decoder_t, ffi.Pointer<ffi.Void>, int, int, ffi.Pointer<ffi.Void>, int)>();
 }
 
 /// PCM Sample Format
