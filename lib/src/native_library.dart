@@ -5,15 +5,21 @@ import '../lc3_decoder_bindings_generated.dart';
 
 const String _libName = 'lc3_decoder';
 
-/// Filenames the native asset can have, most specific first.
+/// Where the native asset can be found, most specific first.
 ///
-/// Apple targets need two: a packaged app wraps the dylib in a framework (for
-/// code signing), while `flutter test` and plain Dart builds leave it as the
-/// bare `lib<name>.dylib` the build hook produced. Trying only one of them
-/// works in exactly one of those two contexts.
+/// Apple targets need all three. A packaged app wraps the dylib in a framework
+/// for code signing; a bare `lib<name>.dylib` covers it having landed on the
+/// dynamic loader's search path; and `flutter test` on macOS leaves it under
+/// `build/`, which needs an explicit relative path because dlopen -- unlike
+/// Windows' LoadLibrary -- does not search the working directory for a plain
+/// filename.
 List<String> _candidateNames() {
   if (Platform.isMacOS || Platform.isIOS) {
-    return ['$_libName.framework/$_libName', 'lib$_libName.dylib'];
+    return [
+      '$_libName.framework/$_libName',
+      'lib$_libName.dylib',
+      if (Platform.isMacOS) 'build/native_assets/macos/lib$_libName.dylib',
+    ];
   }
   if (Platform.isAndroid || Platform.isLinux) return ['lib$_libName.so'];
   if (Platform.isWindows) return ['$_libName.dll'];
