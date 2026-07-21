@@ -40,10 +40,19 @@ jobs:
       # and the iOS build only proves the library links. Running on a
       # simulator is what exercises the packaged framework actually loading
       # and the codec actually running inside an iOS app process.
-      - uses: futureware-tech/simulator-action@v4
+      - name: Boot an iOS simulator
         id: simulator
-        with:
-          os: iOS
+        run: |
+          # Pick whatever iPhone this runner image happens to ship rather than
+          # pinning a model that a future image drops.
+          udid=$(xcrun simctl list devices available \
+            | grep -E '^\s+iPhone' \
+            | head -1 \
+            | grep -oE '[0-9A-F-]{36}')
+          test -n "$udid"
+          xcrun simctl boot "$udid"
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+          xcrun simctl list devices booted
 
       - name: Run the transcoder on an iOS simulator
         working-directory: example
