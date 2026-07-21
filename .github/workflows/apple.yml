@@ -36,6 +36,19 @@ jobs:
       - name: Build and run the native asset on macOS
         run: flutter test
 
+      # The unit tests above load the bare dylib a host build leaves behind,
+      # and the iOS build only proves the library links. Running on a
+      # simulator is what exercises the packaged framework actually loading
+      # and the codec actually running inside an iOS app process.
+      - uses: futureware-tech/simulator-action@v4
+        id: simulator
+        with:
+          os: iOS
+
+      - name: Run the transcoder on an iOS simulator
+        working-directory: example
+        run: flutter test integration_test -d ${{ steps.simulator.outputs.udid }}
+
       # The asset's filename differs per platform and build context, and
       # getting it wrong only shows up as a dlopen failure at runtime.
       - name: Show where the native asset was built
