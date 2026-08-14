@@ -1,3 +1,8 @@
+## 0.1.0
+
+* Add streaming LC3 to Ogg Opus transcoding.
+* Add exact Ogg Opus duration reading from granule positions.
+
 ## 0.0.3
 
 * LC3 audio decoding via FFI bindings to liblc3

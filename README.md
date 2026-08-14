@@ -12,6 +12,7 @@ This package provides a high-performance LC3 audio decoder for Flutter applicati
 - ✅ **Cross-Platform** - Supports Android, iOS, macOS, Windows, and Linux
 - ✅ **Low Latency** - Optimized for real-time audio applications
 - ✅ **Simple API** - Easy-to-use decoder interface
+- ✅ **Ogg Opus Transcoding** - Streams LC3 input directly to an Ogg Opus file
 - ✅ **Automatic Build** - Native code compilation handled via build hooks
 - ✅ **Example App** - Full-featured GUI example with file picker and playback
 
@@ -31,7 +32,10 @@ Add this package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  lc3_decoder: ^0.0.3
+  lc3_decoder:
+    git:
+      url: https://github.com/voicie-com/lc3_decoder.git
+      ref: v0.1.0
 ```
 
 Then run:
@@ -58,6 +62,31 @@ Uint8List pcmData = decoder.decode(compressedFrame);
 
 // Don't forget to dispose when done
 decoder.dispose();
+```
+
+### Streaming to Ogg Opus
+
+```dart
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:lc3_decoder/lc3_to_ogg_transcoder.dart';
+import 'package:lc3_decoder/ogg_opus_duration.dart';
+
+final output = File('recording.ogg');
+final transcoder = Lc3ToOggTranscoder(output.path);
+
+try {
+  await for (final chunk in File('recording.lc3').openRead()) {
+    transcoder.feed(Uint8List.fromList(chunk));
+  }
+  await transcoder.finish();
+} catch (_) {
+  transcoder.abort();
+  rethrow;
+}
+
+final durationMs = await readOggOpusDurationMs(output);
 ```
 
 ### Complete Example
