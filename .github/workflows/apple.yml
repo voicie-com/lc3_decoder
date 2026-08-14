@@ -51,6 +51,7 @@ jobs:
             | grep -oE '[0-9A-F-]{36}')
           test -n "$udid"
           xcrun simctl boot "$udid"
+          xcrun simctl bootstatus "$udid" -b
           echo "udid=$udid" >> "$GITHUB_OUTPUT"
           xcrun simctl list devices booted
 
