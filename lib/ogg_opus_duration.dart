@@ -21,12 +21,11 @@ const int _tailWindowBytes = 128 * 1024;
 /// Reads the exact duration (in milliseconds) of an Ogg Opus file by
 /// locating its granule position, without decoding any audio.
 ///
-/// Fail-safe by contract: returns `null` for anything that isn't a clean,
-/// single-stream Ogg Opus file (malformed pages, a missing or wrong-serial
-/// end-of-stream page, a chained/multi-stream file, a truncated segment
-/// table, or a granule position smaller than the pre-skip) instead of
-/// throwing -- callers use this as a best-effort upgrade over a bitrate
-/// estimate and must never have an upload aborted by it.
+/// Fail-safe by contract: returns `null` when the first page is not an Opus
+/// beginning-of-stream page, the last page is not its matching end-of-stream
+/// page, a parsed page is malformed, or the granule position is smaller than
+/// the pre-skip. It never throws, so callers can use it as a best-effort
+/// upgrade over a bitrate estimate without aborting an upload.
 ///
 /// Reads only two bounded blocks (file head and tail), never the whole
 /// file, so memory use stays constant regardless of file size.
@@ -44,9 +43,10 @@ Future<int?> readOggOpusDurationMs(File file) async {
     final bos = _parsePageAt(head, 0);
     if (bos == null) return null;
     if (!bos.isFirstPage || (bos.headerType & _bosFlag) == 0) return null;
+    if (bos.payloadEnd - bos.payloadStart < _opusHeadMagic.length) return null;
     if (!_matchesAt(head, bos.payloadStart, _opusHeadMagic)) return null;
     // "OpusHead"(8B) + version(1B) + channel_count(1B) + pre_skip(2B) + ...
-    if (bos.payloadStart + 12 > head.length) return null;
+    if (bos.payloadStart + 12 > bos.payloadEnd) return null;
     final preSkip = ByteData.sublistView(head).getUint16(bos.payloadStart + 10, Endian.little);
 
     final tailSize = length < _tailWindowBytes ? length : _tailWindowBytes;
@@ -62,6 +62,7 @@ Future<int?> readOggOpusDurationMs(File file) async {
     if ((eos.headerType & _eosFlag) == 0) return null;
     if (eos.serialNumber != bos.serialNumber) return null;
     if (eos.granulePosition < preSkip) return null;
+    if (tailStart + eos.payloadEnd != length) return null;
 
     final samples = eos.granulePosition - preSkip;
     return (samples * 1000) ~/ _opusGranuleRateHz;
@@ -82,6 +83,7 @@ class _OggPage {
   final int granulePosition;
   final int serialNumber;
   final int payloadStart;
+  final int payloadEnd;
 
   const _OggPage({
     required this.isFirstPage,
@@ -89,6 +91,7 @@ class _OggPage {
     required this.granulePosition,
     required this.serialNumber,
     required this.payloadStart,
+    required this.payloadEnd,
   });
 }
 
@@ -124,6 +127,7 @@ _OggPage? _parsePageAt(Uint8List bytes, int start) {
     granulePosition: granulePosition,
     serialNumber: serialNumber,
     payloadStart: payloadStart,
+    payloadEnd: payloadStart + payloadLength,
   );
 }
 

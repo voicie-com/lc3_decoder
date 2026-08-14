@@ -198,6 +198,50 @@ void main() {
     final file = await _writeFile(tempDir, 'not_opus.ogg', bytes);
     expect(await readOggOpusDurationMs(file), isNull);
   });
+
+  test('OpusHead bytes outside the first page payload return null', () async {
+    final bytes = BytesBuilder()
+      ..add(_oggPage(headerType: _bosFlag, granulePosition: 0, serialNumber: 1, pageSequence: 0, payload: Uint8List(0)))
+      ..add(_opusHeadPayload(preSkip: 0))
+      ..add(
+        _oggPage(
+          headerType: _eosFlag,
+          granulePosition: 48000,
+          serialNumber: 1,
+          pageSequence: 1,
+          payload: Uint8List.fromList([1]),
+        ),
+      );
+
+    final file = await _writeFile(tempDir, 'opus_head_outside_payload.ogg', bytes.toBytes());
+    expect(await readOggOpusDurationMs(file), isNull);
+  });
+
+  test('bytes after the terminal page return null', () async {
+    final bytes = BytesBuilder()
+      ..add(
+        _oggPage(
+          headerType: _bosFlag,
+          granulePosition: 0,
+          serialNumber: 1,
+          pageSequence: 0,
+          payload: _opusHeadPayload(preSkip: 0),
+        ),
+      )
+      ..add(
+        _oggPage(
+          headerType: _eosFlag,
+          granulePosition: 48000,
+          serialNumber: 1,
+          pageSequence: 1,
+          payload: Uint8List.fromList([1]),
+        ),
+      )
+      ..addByte(0);
+
+    final file = await _writeFile(tempDir, 'trailing_byte.ogg', bytes.toBytes());
+    expect(await readOggOpusDurationMs(file), isNull);
+  });
 }
 
 Future<File> _writeFile(Directory dir, String name, Uint8List bytes) async {

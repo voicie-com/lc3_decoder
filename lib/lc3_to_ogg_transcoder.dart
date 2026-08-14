@@ -112,8 +112,10 @@ class Lc3ToOggTranscoder {
     final pathPtr = outputPath.toNativeUtf8();
     final errorPtr = calloc<ffi.Int>();
     try {
-      _comments = nativeBindings.ope_comments_create();
-      final enc = nativeBindings.ope_encoder_create_file(pathPtr.cast(), _comments!, _sampleRateHz, 1, 0, errorPtr);
+      final comments = nativeBindings.ope_comments_create();
+      if (comments == ffi.nullptr) throw StateError('ope_comments_create failed');
+      _comments = comments;
+      final enc = nativeBindings.ope_encoder_create_file(pathPtr.cast(), comments, _sampleRateHz, 1, 0, errorPtr);
       if (enc == ffi.nullptr) {
         throw StateError('ope_encoder_create_file failed with error code ${errorPtr.value}');
       }
@@ -123,15 +125,22 @@ class Lc3ToOggTranscoder {
       calloc.free(errorPtr);
     }
 
-    nativeBindings.shim_ope_encoder_ctl_set_application(_enc!, OPUS_APPLICATION_VOIP);
+    _checkEncoderControl(
+      'application',
+      nativeBindings.shim_ope_encoder_ctl_set_application(_enc!, OPUS_APPLICATION_VOIP),
+    );
     // ponytail: fixed voice-optimized settings, no configuration surface --
     // revisit only if listening/transcription quality shows a reason to.
-    nativeBindings.shim_ope_encoder_ctl_set_bitrate(_enc!, 32000);
-    nativeBindings.shim_ope_encoder_ctl_set_signal(_enc!, OPUS_SIGNAL_VOICE);
-    nativeBindings.shim_ope_encoder_ctl_set_vbr(_enc!, 1);
+    _checkEncoderControl('bitrate', nativeBindings.shim_ope_encoder_ctl_set_bitrate(_enc!, 32000));
+    _checkEncoderControl('signal', nativeBindings.shim_ope_encoder_ctl_set_signal(_enc!, OPUS_SIGNAL_VOICE));
+    _checkEncoderControl('vbr', nativeBindings.shim_ope_encoder_ctl_set_vbr(_enc!, 1));
 
     _pending = _pending.sublist(_lc3HeaderBytes);
     _headerParsed = true;
+  }
+
+  void _checkEncoderControl(String setting, int result) {
+    if (result != OPUS_OK) throw StateError('Failed to set Opus $setting: error code $result');
   }
 
   void _drainCompleteFrames() {
@@ -192,6 +201,8 @@ class Lc3ToOggTranscoder {
   /// buffering (end-trimming, lookahead, final page) and closes the file.
   /// On any failure this calls [abort] before rethrowing.
   Future<void> finish() async {
+    if (_finished) throw StateError('finish() called after finish()/abort()');
+
     try {
       if (!_headerParsed) {
         throw const FormatException('LC3 stream ended before a complete header was received');
@@ -224,7 +235,10 @@ class Lc3ToOggTranscoder {
   /// handlers, where a cleanup failure must not shadow the original error
   /// or crash an otherwise-recovering flow.
   void abort() {
+    if (_finished) return;
+
     try {
+      final deleteOutput = _enc != null;
       if (_enc != null) {
         nativeBindings.ope_encoder_destroy(_enc!);
         _enc = null;
@@ -233,7 +247,7 @@ class Lc3ToOggTranscoder {
       _finished = true;
 
       final file = File(outputPath);
-      if (file.existsSync()) file.deleteSync();
+      if (deleteOutput && file.existsSync()) file.deleteSync();
     } catch (_) {
       // Best-effort: the caller is already handling a failure (or this is a
       // redundant abort); an orphaned file here gets swept by the caller's
@@ -256,7 +270,7 @@ class Lc3ToOggTranscoder {
   }
 
   static Uint8List _append(Uint8List existing, Uint8List more) {
-    if (existing.isEmpty) return more;
+    if (existing.isEmpty) return Uint8List.fromList(more);
     if (more.isEmpty) return existing;
     final combined = Uint8List(existing.length + more.length);
     combined.setAll(0, existing);

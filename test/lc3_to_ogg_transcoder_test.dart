@@ -47,6 +47,20 @@ void main() {
       expect(durationMs, header.nsamples * 1000 ~/ header.sampleRateHz);
     });
 
+    test('retained partial input is not affected when the caller reuses its buffer', () async {
+      final bytes = await File(_testAssetPath).readAsBytes();
+      final firstChunk = Uint8List.fromList(bytes.sublist(0, 10));
+      final outPath = '${tempDir.path}/reused_buffer.ogg';
+      final t = Lc3ToOggTranscoder(outPath);
+
+      t.feed(firstChunk);
+      firstChunk.fillRange(0, firstChunk.length, 0);
+      t.feed(Uint8List.sublistView(bytes, 10));
+      await t.finish();
+
+      expect(File(outPath).existsSync(), isTrue);
+    });
+
     test('splitting on every possible byte boundary always succeeds and matches duration', () async {
       final bytes = await File(_testAssetPath).readAsBytes();
       final header = _parseHeader(bytes);
@@ -279,8 +293,18 @@ void main() {
       t.abort();
       expect(File(outPath).existsSync(), isFalse);
 
-      t.abort(); // must not throw
-      expect(File(outPath).existsSync(), isFalse);
+      File(outPath).writeAsStringSync('replacement');
+      t.abort();
+      expect(File(outPath).readAsStringSync(), 'replacement');
+    });
+
+    test('abort before initialization preserves a pre-existing output file', () {
+      final outPath = '${tempDir.path}/pre_existing.ogg';
+      File(outPath).writeAsStringSync('existing');
+
+      Lc3ToOggTranscoder(outPath).abort();
+
+      expect(File(outPath).readAsStringSync(), 'existing');
     });
 
     test('feed after finish throws StateError', () async {
@@ -299,6 +323,44 @@ void main() {
       await t.finish();
 
       expect(() => t.feed(Uint8List(1)), throwsStateError);
+    });
+
+    test('a second finish throws without deleting the completed output', () async {
+      final fixture = await _loadFixtureFrames();
+      final outPath = '${tempDir.path}/second_finish.ogg';
+      final container = _buildContainer(
+        sampleRateHz: fixture.sampleRateHz,
+        bitrateBps: 32000,
+        channels: 1,
+        frameDurationUs: fixture.frameDurationUs,
+        nsamples: 160,
+        frames: [fixture.frames[0]],
+      );
+      final t = Lc3ToOggTranscoder(outPath);
+      t.feed(container);
+      await t.finish();
+
+      await expectLater(t.finish(), throwsStateError);
+      expect(File(outPath).existsSync(), isTrue);
+    });
+
+    test('abort after finish preserves the completed output', () async {
+      final fixture = await _loadFixtureFrames();
+      final outPath = '${tempDir.path}/abort_after_finish.ogg';
+      final container = _buildContainer(
+        sampleRateHz: fixture.sampleRateHz,
+        bitrateBps: 32000,
+        channels: 1,
+        frameDurationUs: fixture.frameDurationUs,
+        nsamples: 160,
+        frames: [fixture.frames[0]],
+      );
+      final t = Lc3ToOggTranscoder(outPath);
+      t.feed(container);
+      await t.finish();
+
+      t.abort();
+      expect(File(outPath).existsSync(), isTrue);
     });
   });
 }
