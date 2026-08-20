@@ -15,6 +15,51 @@ const int _lc3HeaderBytes = 18;
 // instead of buffering forever waiting for bytes that will never arrive.
 const int _maxReasonableFrameBytes = 4096;
 
+/// Rewrites the sample count in a streamed LC3 container header.
+///
+/// The first header may arrive across multiple [add] calls. Once complete,
+/// the corrected header and all following bytes are returned unchanged.
+class Lc3HeaderSampleCountRewriter {
+  /// Sample count written to bytes 14-17 of the LC3 header.
+  final int sampleCount;
+
+  Uint8List _pending = Uint8List(0);
+  bool _rewritten = false;
+
+  /// Creates a rewriter for the final [sampleCount].
+  Lc3HeaderSampleCountRewriter({required this.sampleCount}) {
+    if (sampleCount < 0 || sampleCount > 0xFFFFFFFF) {
+      throw RangeError.range(sampleCount, 0, 0xFFFFFFFF, 'sampleCount');
+    }
+  }
+
+  /// Adds an arbitrary byte window and returns bytes ready for downstream
+  /// consumers. Returns an empty list while waiting for a complete header.
+  Uint8List add(List<int> chunk) {
+    if (_rewritten) return chunk is Uint8List ? chunk : Uint8List.fromList(chunk);
+
+    final combined = Uint8List(_pending.length + chunk.length)
+      ..setAll(0, _pending)
+      ..setAll(_pending.length, chunk);
+    if (combined.length < _lc3HeaderBytes) {
+      _pending = combined;
+      return Uint8List(0);
+    }
+
+    combined.buffer.asByteData().setUint32(14, sampleCount, Endian.little);
+    _pending = Uint8List(0);
+    _rewritten = true;
+    return combined;
+  }
+
+  /// Validates that the stream contained a complete LC3 header.
+  void finish() {
+    if (!_rewritten) {
+      throw const FormatException('LC3 stream ended before a complete header was received');
+    }
+  }
+}
+
 /// Streams a container of LC3 frames (18-byte header + `[len u16][frame]...`,
 /// see the device's file format) straight into an Ogg Opus file on disk,
 /// decoding each frame to PCM and handing it to libopusenc as it arrives.

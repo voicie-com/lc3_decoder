@@ -1,3 +1,8 @@
+## 0.1.1
+
+* Add streaming LC3 header sample-count rewriting.
+* Reject streams that end before the complete LC3 header is received.
+
 ## 0.1.0
 
 * Add streaming LC3 to Ogg Opus transcoding.

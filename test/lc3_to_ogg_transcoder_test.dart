@@ -18,6 +18,26 @@ void main() {
     if (tempDir.existsSync()) tempDir.deleteSync(recursive: true);
   });
 
+  group('LC3 header sample-count rewrite', () {
+    test('rewrites a split header and preserves following bytes', () {
+      final rewriter = Lc3HeaderSampleCountRewriter(sampleCount: 0x12345678);
+
+      expect(rewriter.add(List<int>.filled(10, 0)), isEmpty);
+      final rewritten = rewriter.add(List<int>.filled(10, 0));
+      rewriter.finish();
+
+      expect(rewritten.length, 20);
+      expect(ByteData.sublistView(rewritten).getUint32(14, Endian.little), 0x12345678);
+      expect(rewriter.add(<int>[1, 2, 3]), <int>[1, 2, 3]);
+    });
+
+    test('rejects a stream without a complete header', () {
+      final rewriter = Lc3HeaderSampleCountRewriter(sampleCount: 160)..add(List<int>.filled(17, 0));
+
+      expect(rewriter.finish, throwsFormatException);
+    });
+  });
+
   group('feed split fuzzing (real device asset)', () {
     test('feeding the whole file in one call produces the exact declared duration', () async {
       final bytes = await File(_testAssetPath).readAsBytes();
