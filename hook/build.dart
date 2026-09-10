@@ -92,6 +92,10 @@ const List<String> _libopusencSources = [
 
 void main(List<String> args) async {
   await build(args, (config, output) async {
+    // Flutter can invoke hooks without requesting native code assets.
+    // In that case no code configuration is provided; do not access it.
+    if (!config.config.buildCodeAssets) return;
+
     final cbuilder = CBuilder.library(
       name: 'lc3_decoder',
       assetName: 'lc3_decoder.dart',
